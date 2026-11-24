@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block page_title %}Parcelas do Empréstimo{% endblock %}
+{% block page_subtitle %}<span id="header-cliente-info">Gerenciamento do cronograma financeiro</span>{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+    <a href="/web/emprestimos" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Voltar aos Empréstimos</a>
+</div>
+
+<!-- Cards de Resumo do Empréstimo -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <span class="metric-title">Total do Empréstimo</span>
+        <span class="metric-value" id="card-total-emprestimo">...</span>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Total Pago</span>
+        <span class="metric-value" id="card-total-pago" style="color: #16a34a;">...</span>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Total a Pagar</span>
+        <span class="metric-value" id="card-total-pagar" style="color: #0284c7;">...</span>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Status Geral</span>
+        <span class="metric-value" id="card-status-badge">...</span>
+    </div>
+</div>
+
+<!-- Tabela de Parcelas -->
+<div class="panel-card" style="padding: 0; overflow: hidden; margin-top: 16px;">
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Parcela</th>
+                    <th>Vencimento</th>
+                    <th>Amortização</th>
+                    <th>Juros</th>
+                    <th>Valor Total</th>
+                    <th>Status</th>
+                    <th style="text-align: center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-parcelas">
+                <tr><td colspan="7" style="text-align: center; padding: 24px; color: #94a3b8;">Carregando parcelas...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Pagamento de Parcela -->
+<div class="modal-overlay" id="modalPagamento">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitulo" style="color: #0f172a; font-size: 1.15rem;">Registrar Pagamento</h3>
+            <button class="close-modal-btn" onclick="fecharModal()">&times;</button>
+        </div>
+        <form onsubmit="confirmarPagamento(event)">
+            <input type="hidden" id="modalParcelaId">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Valor da Parcela</label>
+                    <input type="text" id="modalValorOriginal" class="form-control" readonly style="background: #f8fafc; font-weight: 600;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Valor Pago (R$) *</label>
+                    <input type="number" id="modalValorPago" class="form-control" step="0.01" min="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Data do Pagamento *</label>
+                    <input type="date" id="modalDataPagamento" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Forma de Pagamento</label>
+                    <select id="modalMetodo" class="form-control">
+                        <option value="Pix">Pix</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Transferência Bancária">Transferência Bancária</option>
+                        <option value="Boleto">Boleto</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Observações</label>
+                    <input type="text" id="modalObservacoes" class="form-control" placeholder="Ex: Comprovante enviado via WhatsApp">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+                <button type="submit" class="btn btn-success">Confirmar Pagamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const emprestimoId = {{ emprestimo_id }};
+
+    async function carregarDetalhes() {
+        const emp = await apiFetch(`/emprestimos/${emprestimoId}`);
+        if (!emp) return;
+
+        const clienteNome = emp.cliente ? emp.cliente.nome : 'Cliente #' + emp.clienteId;
+        document.getElementById('header-cliente-info').innerText = `Cliente: ${clienteNome} | Contrato #${emp.id}`;
+
+        const totalPago = emp.parcelas.reduce((acc, p) => acc + (p.valorPago || 0), 0);
+        const totalPagar = Math.max(0, emp.totalPagar - totalPago);
+
+        document.getElementById('card-total-emprestimo').innerText = formatBRL(emp.totalPagar);
+        document.getElementById('card-total-pago').innerText = formatBRL(totalPago);
+        document.getElementById('card-total-pagar').innerText = formatBRL(totalPagar);
+
+        let badgeClass = 'badge-warning';
+        if (emp.status === 'Quitado') badgeClass = 'badge-success';
+        else if (emp.status === 'Atrasado') badgeClass = 'badge-danger';
+        else if (emp.status === 'Em andamento') badgeClass = 'badge-info';
+
+        document.getElementById('card-status-badge').innerHTML = `<span class="badge ${badgeClass}" style="font-size: 1.1rem; padding: 6px 14px;">${emp.status}</span>`;
+
+        // Montar tabela de parcelas
+        const tbody = document.getElementById('tabela-parcelas');
+        tbody.innerHTML = '';
+
+        emp.parcelas.forEach(p => {
+            let pBadge = 'badge-warning';
+            let label = p.status;
+            if (p.status === 'Pago') {
+                pBadge = 'badge-success';
+            } else if (p.status === 'Atrasado') {
+                pBadge = 'badge-danger';
+                label = `Atrasado (${p.diasAtraso}d)`;
+            }
+
+            const disabled = p.status === 'Pago' ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+            const pagarBtn = p.status === 'Pago' 
+                ? `<span style="color: #16a34a; font-weight: 600;"><i class="fa-solid fa-check"></i> Pago</span>`
+                : `<button onclick="abrirModal(${p.id}, ${p.numero}, ${p.valorTotal - p.valorPago})" class="btn btn-primary btn-sm"><i class="fa-solid fa-money-bill-wave"></i> Pagar</button>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight: 600;">${p.numero}/${emp.prazo}</td>
+                    <td>${formatDate(p.vencimento)}</td>
+                    <td>${formatBRL(p.valorOriginal)}</td>
+                    <td>${formatBRL(p.juros)}</td>
+                    <td style="font-weight: 700; color: #0f172a;">${formatBRL(p.valorTotal)}</td>
+                    <td><span class="badge ${pBadge}">${label}</span></td>
+                    <td style="text-align: center;">${pagarBtn}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function abrirModal(parcelaId, num, saldoRestante) {
+        document.getElementById('modalParcelaId').value = parcelaId;
+        document.getElementById('modalTitulo').innerText = `Pagamento da Parcela ${num}`;
+        document.getElementById('modalValorOriginal').value = formatBRL(saldoRestante);
+        document.getElementById('modalValorPago').value = saldoRestante.toFixed(2);
+        document.getElementById('modalDataPagamento').value = new Date().toISOString().split('T')[0];
+        document.getElementById('modalObservacoes').value = '';
+        document.getElementById('modalPagamento').style.display = 'flex';
+    }
+
+    function fecharModal() {
+        document.getElementById('modalPagamento').style.display = 'none';
+    }
+
+    async function confirmarPagamento(e) {
+        e.preventDefault();
+        const parcelaId = parseInt(document.getElementById('modalParcelaId').value);
+        const valorPago = parseFloat(document.getElementById('modalValorPago').value);
+        const dataPagamento = document.getElementById('modalDataPagamento').value;
+        const metodoPagamento = document.getElementById('modalMetodo').value;
+        const observacoes = document.getElementById('modalObservacoes').value;
+
+        try {
+            await apiFetch('/pagamentos', {
+                method: 'POST',
+                body: JSON.stringify({
+                    parcelaId,
+                    valorPago,
+                    dataPagamento,
+                    metodoPagamento,
+                    observacoes
+                })
+            });
+            alert('Pagamento registrado com sucesso!');
+            fecharModal();
+            carregarDetalhes();
+        } catch (err) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', carregarDetalhes);
+</script>
+{% endblock %}

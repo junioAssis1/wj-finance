@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WJ Finance - Sistema de Gerenciamento de Empréstimos{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Chart.js para os gráficos do Dashboard e Relatórios -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo-badge">WJ</div>
+                <div class="brand-text">
+                    <h2>WJ FINANCE</h2>
+                    <p>Gestão de Empréstimos</p>
+                </div>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item {% if active_page == 'dashboard' %}active{% endif %}">
+                    <a href="/"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+                </li>
+                <li class="sidebar-item {% if active_page == 'clientes' %}active{% endif %}">
+                    <a href="/web/clientes"><i class="fa-solid fa-users"></i> Clientes</a>
+                </li>
+                <li class="sidebar-item {% if active_page == 'emprestimos' %}active{% endif %}">
+                    <a href="/web/emprestimos"><i class="fa-solid fa-file-invoice-dollar"></i> Empréstimos</a>
+                </li>
+                <li class="sidebar-item {% if active_page == 'parcelas' %}active{% endif %}">
+                    <a href="/web/parcelas"><i class="fa-solid fa-calendar-check"></i> Parcelas</a>
+                </li>
+                <li class="sidebar-item {% if active_page == 'simulador' %}active{% endif %}">
+                    <a href="/web/simulador"><i class="fa-solid fa-calculator"></i> Simulador</a>
+                </li>
+                <li class="sidebar-item {% if active_page == 'relatorios' %}active{% endif %}">
+                    <a href="/web/relatorios"><i class="fa-solid fa-chart-line"></i> Relatórios</a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="javascript:void(0)" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</a>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                    <p>{% block page_subtitle %}Visão geral do seu negócio{% endblock %}</p>
+                </div>
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="name">{{ user.nome if user else 'Junio Assis' }}</div>
+                        <div class="role">{{ user.perfil if user else 'ADMIN' }}</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Body -->
+            <main class="content-body">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

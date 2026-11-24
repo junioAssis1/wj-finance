@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block page_title %}Todas as Parcelas{% endblock %}
+{% block page_subtitle %}Acompanhamento geral de vencimentos e cobranças{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <label class="form-label" style="margin: 0;">Filtrar por Status:</label>
+        <select id="filtroStatus" class="form-control" style="width: 180px;" onchange="carregarParcelas()">
+            <option value="">Todos os status</option>
+            <option value="Atrasado">Atrasadas</option>
+            <option value="Em aberto">Em aberto</option>
+            <option value="Pago">Pagas</option>
+        </select>
+    </div>
+</div>
+
+<div class="panel-card" style="padding: 0; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Contrato</th>
+                    <th>Nº Parcela</th>
+                    <th>Vencimento</th>
+                    <th>Valor Total</th>
+                    <th>Valor Pago</th>
+                    <th>Status</th>
+                    <th>Atraso</th>
+                    <th style="text-align: center;">Ação</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-todas-parcelas">
+                <tr><td colspan="8" style="text-align: center; padding: 24px; color: #94a3b8;">Carregando parcelas...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function carregarParcelas() {
+        const status = document.getElementById('filtroStatus').value;
+        const url = status ? `/parcelas?status=${encodeURIComponent(status)}` : '/parcelas';
+        const lista = await apiFetch(url);
+        const tbody = document.getElementById('tabela-todas-parcelas');
+        tbody.innerHTML = '';
+
+        if (!lista || lista.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: #94a3b8;">Nenhuma parcela encontrada.</td></tr>';
+            return;
+        }
+
+        lista.forEach(p => {
+            let badgeClass = 'badge-warning';
+            if (p.status === 'Pago') badgeClass = 'badge-success';
+            else if (p.status === 'Atrasado') badgeClass = 'badge-danger';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><a href="/web/emprestimos/${p.emprestimoId}/parcelas" style="color: #f97316; font-weight: 600; text-decoration: none;">#${p.emprestimoId}</a></td>
+                    <td style="font-weight: 600;">Parcela ${p.numero}</td>
+                    <td>${formatDate(p.vencimento)}</td>
+                    <td style="font-weight: 600;">${formatBRL(p.valorTotal)}</td>
+                    <td style="color: #16a34a;">${formatBRL(p.valorPago)}</td>
+                    <td><span class="badge ${badgeClass}">${p.status}</span></td>
+                    <td style="color: ${p.diasAtraso > 0 ? '#ef4444' : '#64748b'}; font-weight: ${p.diasAtraso > 0 ? '600' : 'normal'}">${p.diasAtraso > 0 ? p.diasAtraso + ' dias' : '-'}</td>
+                    <td style="text-align: center;">
+                        <a href="/web/emprestimos/${p.emprestimoId}/parcelas" class="btn btn-secondary btn-sm">Ver Contrato</a>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', carregarParcelas);
+</script>
+{% endblock %}

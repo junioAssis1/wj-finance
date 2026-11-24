@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block page_title %}Empréstimos{% endblock %}
+{% block page_subtitle %}Gerencie os empréstimos realizados{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Buscar por cliente ou CPF..." onkeyup="handleSearch(event)">
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="/web/emprestimos/novo" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Novo Empréstimo
+        </a>
+    </div>
+</div>
+
+<div class="panel-card" style="padding: 0; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                    <th>Total a Pagar</th>
+                    <th style="text-align: center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-emprestimos">
+                <tr><td colspan="6" style="text-align: center; padding: 24px; color: #94a3b8;">Carregando empréstimos...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let searchTimeout = null;
+
+    async function carregarEmprestimos(query = '') {
+        const url = query ? `/emprestimos?q=${encodeURIComponent(query)}` : '/emprestimos';
+        const lista = await apiFetch(url);
+        const tbody = document.getElementById('tabela-emprestimos');
+        tbody.innerHTML = '';
+
+        if (!lista || lista.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8;">Nenhum empréstimo cadastrado.</td></tr>';
+            return;
+        }
+
+        lista.forEach(e => {
+            let badgeClass = 'badge-warning';
+            if (e.status === 'Quitado') badgeClass = 'badge-success';
+            else if (e.status === 'Atrasado') badgeClass = 'badge-danger';
+            else if (e.status === 'Em andamento') badgeClass = 'badge-info';
+
+            const clienteNome = e.cliente ? e.cliente.nome : 'Cliente #' + e.clienteId;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight: 600; color: #0f172a;">${clienteNome}</td>
+                    <td style="font-weight: 600;">${formatBRL(e.valor)}</td>
+                    <td>${formatDate(e.data)}</td>
+                    <td><span class="badge ${badgeClass}">${e.status}</span></td>
+                    <td style="font-weight: 600; color: #0284c7;">${formatBRL(e.totalPagar)}</td>
+                    <td style="text-align: center;">
+                        <a href="/web/emprestimos/${e.id}/parcelas" class="btn btn-secondary btn-sm" title="Ver Parcelas">
+                            <i class="fa-solid fa-receipt"></i> Parcelas
+                        </a>
+                        <button onclick="excluirEmprestimo(${e.id})" class="btn-icon" style="color: #ef4444;" title="Excluir"><i class="fa-regular fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function handleSearch(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            carregarEmprestimos(e.target.value);
+        }, 300);
+    }
+
+    async function excluirEmprestimo(id) {
+        if (!confirm('Deseja realmente excluir este empréstimo e todas as suas parcelas?')) return;
+        try {
+            await apiFetch(`/emprestimos/${id}`, { method: 'DELETE' });
+            alert('Empréstimo excluído com sucesso!');
+            carregarEmprestimos();
+        } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => carregarEmprestimos());
+</script>
+{% endblock %}

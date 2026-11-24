@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block page_title %}Relatórios{% endblock %}
+{% block page_subtitle %}Gerencie e visualize as métricas financeiras do seu negócio{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <label class="form-label" style="margin: 0;">Período:</label>
+        <input type="date" id="dataInicio" class="form-control" style="width: 160px;">
+        <span style="color: #94a3b8;">até</span>
+        <input type="date" id="dataFim" class="form-control" style="width: 160px;">
+        <button onclick="carregarRelatorio()" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-filter"></i> Filtrar
+        </button>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="exportarExcel()" class="btn btn-success btn-sm">
+            <i class="fa-solid fa-file-excel"></i> Exportar CSV/Excel
+        </button>
+        <button onclick="window.print()" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-print"></i> Imprimir / PDF
+        </button>
+    </div>
+</div>
+
+<!-- Cards Métricas -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <span class="metric-title">Total Emprestado</span>
+        <span class="metric-value" id="rel-emprestado">...</span>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Total a Receber</span>
+        <span class="metric-value" id="rel-receber" style="color: #0284c7;">...</span>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Total Recebido</span>
+        <span class="metric-value" id="rel-recebido" style="color: #16a34a;">...</span>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Total de Contratos</span>
+        <span class="metric-value" id="rel-contratos">...</span>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="dashboard-grid">
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>Empréstimos por Status</h3>
+        </div>
+        <div style="position: relative; height: 260px; display: flex; justify-content: center; align-items: center;">
+            <canvas id="relStatusChart"></canvas>
+        </div>
+    </div>
+
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>Evolução de Recebimentos</h3>
+        </div>
+        <div style="position: relative; height: 260px;">
+            <canvas id="relEvolucaoChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let statusChart = null;
+    let evolucaoChart = null;
+
+    async function carregarRelatorio() {
+        const dtIni = document.getElementById('dataInicio').value;
+        const dtFim = document.getElementById('dataFim').value;
+
+        let query = [];
+        if (dtIni) query.push(`data_inicio=${dtIni}`);
+        if (dtFim) query.push(`data_fim=${dtFim}`);
+
+        const url = '/relatorios' + (query.length > 0 ? '?' + query.join('&') : '');
+        const data = await apiFetch(url);
+        if (!data) return;
+
+        document.getElementById('rel-emprestado').innerText = formatBRL(data.totalEmprestado);
+        document.getElementById('rel-receber').innerText = formatBRL(data.totalReceber);
+        document.getElementById('rel-recebido').innerText = formatBRL(data.totalRecebido);
+        document.getElementById('rel-contratos').innerText = data.totalContratos;
+
+        // Donut Chart
+        const sc = data.statusContagem;
+        const ctxStatus = document.getElementById('relStatusChart').getContext('2d');
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: ['Em aberto', 'Em andamento', 'Atrasados', 'Quitados'],
+                datasets: [{
+                    data: [
+                        sc['Em aberto'] || 0,
+                        sc['Em andamento'] || 0,
+                        sc['Atrasado'] || 0,
+                        sc['Quitado'] || 0
+                    ],
+                    backgroundColor: ['#f59e0b', '#0284c7', '#ef4444', '#10b981'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%'
+            }
+        });
+
+        // Line Chart Evolução
+        const ctxEvolucao = document.getElementById('relEvolucaoChart').getContext('2d');
+        if (evolucaoChart) evolucaoChart.destroy();
+        evolucaoChart = new Chart(ctxEvolucao, {
+            type: 'line',
+            data: {
+                labels: data.evolucao.labels,
+                datasets: [{
+                    label: 'Recebimentos (R$)',
+                    data: data.evolucao.valores,
+                    borderColor: '#f97316',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#f97316'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) { return 'R$ ' + value; }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function exportarExcel() {
+        const dtIni = document.getElementById('dataInicio').value;
+        const dtFim = document.getElementById('dataFim').value;
+        let query = [];
+        if (dtIni) query.push(`data_inicio=${dtIni}`);
+        if (dtFim) query.push(`data_fim=${dtFim}`);
+        const url = '/relatorios/exportar-csv' + (query.length > 0 ? '?' + query.join('&') : '');
+        window.location.href = url;
+    }
+
+    document.addEventListener('DOMContentLoaded', carregarRelatorio);
+</script>
+{% endblock %}

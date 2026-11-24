@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block page_title %}Novo Empréstimo{% endblock %}
+{% block page_subtitle %}Cadastre um novo empréstimo no sistema{% endblock %}
+
+{% block content %}
+<div class="panel-card" style="max-width: 850px; margin: 0 auto; width: 100%;">
+    <div class="panel-header">
+        <h3>Informações do Empréstimo</h3>
+        <a href="/web/emprestimos" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+    </div>
+
+    <form id="emprestimoForm" onsubmit="salvarEmprestimo(event)">
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label class="form-label">Cliente *</label>
+                <select id="clienteId" class="form-control" required>
+                    <option value="">Selecione um cliente...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Valor Emprestado (R$) *</label>
+                <input type="number" id="valor" class="form-control" step="0.01" min="10" placeholder="Ex: 5000.00" required oninput="atualizarPrevia()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Tipo de Juros *</label>
+                <select id="tipoJuros" class="form-control" onchange="atualizarPrevia()">
+                    <option value="compostos">Compostos (Sistema Francês / Price)</option>
+                    <option value="simples">Simples</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Taxa de Juros (%) *</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" id="taxa" class="form-control" step="0.01" min="0" placeholder="Ex: 5.0" value="5.0" required oninput="atualizarPrevia()">
+                    <input type="text" class="form-control" value="ao mês" readonly style="width: 100px; background: #f8fafc;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Prazo (meses / parcelas) *</label>
+                <input type="number" id="prazo" class="form-control" min="1" max="120" placeholder="Ex: 12" value="12" required oninput="atualizarPrevia()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Data do Empréstimo</label>
+                <input type="date" id="dataEmprestimo" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Primeiro Vencimento</label>
+                <input type="date" id="primeiroVencimento" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Forma de Pagamento</label>
+                <select id="formaPagamento" class="form-control">
+                    <option value="Pix">Pix</option>
+                    <option value="Boleto">Boleto</option>
+                    <option value="Transferência Bancária">Transferência Bancária</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label class="form-label">Observações (opcional)</label>
+                <textarea id="observacoes" class="form-control" rows="2" placeholder="Observações sobre o empréstimo..."></textarea>
+            </div>
+        </div>
+
+        <!-- Card de Prévia em Tempo Real -->
+        <div style="margin-top: 20px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+            <div>
+                <span style="font-size: 0.75rem; color: #9a3412; font-weight: 600; text-transform: uppercase;">Valor da Parcela</span>
+                <div id="previa-parcela" style="font-size: 1.3rem; font-weight: 700; color: #c2410c;">R$ 0,00</div>
+            </div>
+            <div>
+                <span style="font-size: 0.75rem; color: #9a3412; font-weight: 600; text-transform: uppercase;">Total de Juros</span>
+                <div id="previa-juros" style="font-size: 1.3rem; font-weight: 700; color: #c2410c;">R$ 0,00</div>
+            </div>
+            <div>
+                <span style="font-size: 0.75rem; color: #9a3412; font-weight: 600; text-transform: uppercase;">Total a Pagar</span>
+                <div id="previa-total" style="font-size: 1.3rem; font-weight: 700; color: #c2410c;">R$ 0,00</div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+            <a href="/web/emprestimos" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Salvar e Gerar Parcelas</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let simulacaoTimer = null;
+
+    async function carregarClientes() {
+        const clientes = await apiFetch('/clientes?status=Ativo');
+        const select = document.getElementById('clienteId');
+        if (clientes) {
+            clientes.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.nome} (CPF: ${c.cpf})</option>`;
+            });
+        }
+    }
+
+    function inicializarDatas() {
+        const hoje = new Date();
+        document.getElementById('dataEmprestimo').value = hoje.toISOString().split('T')[0];
+
+        // 1 mês depois
+        const prox = new Date(hoje);
+        prox.setMonth(prox.getMonth() + 1);
+        document.getElementById('primeiroVencimento').value = prox.toISOString().split('T')[0];
+    }
+
+    async function atualizarPrevia() {
+        clearTimeout(simulacaoTimer);
+        simulacaoTimer = setTimeout(async () => {
+            const valor = parseFloat(document.getElementById('valor').value);
+            const taxa = parseFloat(document.getElementById('taxa').value);
+            const prazo = parseInt(document.getElementById('prazo').value);
+            const tipoJuros = document.getElementById('tipoJuros').value;
+
+            if (!valor || valor <= 0 || isNaN(taxa) || !prazo || prazo <= 0) return;
+
+            try {
+                const res = await apiFetch('/simulacoes', {
+                    method: 'POST',
+                    body: JSON.stringify({ valor, taxa, prazo, tipoJuros })
+                });
+                if (res) {
+                    document.getElementById('previa-parcela').innerText = formatBRL(res.valor_parcela);
+                    document.getElementById('previa-juros').innerText = formatBRL(res.total_juros);
+                    document.getElementById('previa-total').innerText = formatBRL(res.total_pagar);
+                }
+            } catch (e) {}
+        }, 200);
+    }
+
+    async function salvarEmprestimo(e) {
+        e.preventDefault();
+
+        const payload = {
+            clienteId: parseInt(document.getElementById('clienteId').value),
+            valor: parseFloat(document.getElementById('valor').value),
+            taxa: parseFloat(document.getElementById('taxa').value),
+            tipoJuros: document.getElementById('tipoJuros').value,
+            periodicidade: "ao mês",
+            prazo: parseInt(document.getElementById('prazo').value),
+            data: document.getElementById('dataEmprestimo').value || null,
+            primeiroVencimento: document.getElementById('primeiroVencimento').value || null,
+            formaPagamento: document.getElementById('formaPagamento').value,
+            observacoes: document.getElementById('observacoes').value || null
+        };
+
+        try {
+            const novo = await apiFetch('/emprestimos', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            alert('Empréstimo e parcelas gerados com sucesso!');
+            window.location.href = `/web/emprestimos/${novo.id}/parcelas`;
+        } catch (err) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        carregarClientes();
+        inicializarDatas();
+    });
+</script>
+{% endblock %}

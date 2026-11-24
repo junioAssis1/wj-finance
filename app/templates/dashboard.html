@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Visão geral do seu negócio{% endblock %}
+
+{% block content %}
+<!-- Cards Métricas Superiores -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <span class="metric-title">Total Emprestado</span>
+        <span class="metric-value" id="card-total-emprestado">Carregando...</span>
+        <a href="/web/emprestimos" class="metric-link">Ver detalhes</a>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Total a Receber</span>
+        <span class="metric-value" id="card-total-receber" style="color: #0284c7;">Carregando...</span>
+        <a href="/web/parcelas" class="metric-link">Ver parcelas</a>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Total Recebido</span>
+        <span class="metric-value" id="card-total-recebido" style="color: #16a34a;">Carregando...</span>
+        <a href="/web/relatorios" class="metric-link">Ver histórico</a>
+    </div>
+    <div class="metric-card">
+        <span class="metric-title">Clientes Cadastrados</span>
+        <span class="metric-value" id="card-clientes-cadastrados">Carregando...</span>
+        <a href="/web/clientes" class="metric-link">Ver lista</a>
+    </div>
+</div>
+
+<!-- Grid de Gráficos e Próximos Vencimentos -->
+<div class="dashboard-grid">
+    <!-- Gráfico Donut de Status -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>Empréstimos por Status</h3>
+        </div>
+        <div style="position: relative; height: 260px; display: flex; justify-content: center; align-items: center;">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Tabela Próximos Vencimentos -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>Próximos Vencimentos</h3>
+            <a href="/web/parcelas" class="metric-link">Ver todos</a>
+        </div>
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Valor</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-vencimentos">
+                    <tr><td colspan="4" style="text-align: center; color: #94a3b8;">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let chartInstance = null;
+
+    async function loadDashboard() {
+        const data = await apiFetch('/dashboard');
+        if (!data) return;
+
+        document.getElementById('card-total-emprestado').innerText = formatBRL(data.totalEmprestado);
+        document.getElementById('card-total-receber').innerText = formatBRL(data.totalReceber);
+        document.getElementById('card-total-recebido').innerText = formatBRL(data.totalRecebido);
+        document.getElementById('card-clientes-cadastrados').innerText = data.clientesCadastrados;
+
+        // Preencher próximos vencimentos
+        const tbody = document.getElementById('tabela-vencimentos');
+        tbody.innerHTML = '';
+        if (data.proximosVencimentos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8;">Nenhum vencimento pendente.</td></tr>';
+        } else {
+            data.proximosVencimentos.forEach(v => {
+                const badgeClass = v.status === 'Atrasado' ? 'badge-danger' : 'badge-warning';
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 500;">${v.cliente_nome}</td>
+                        <td style="font-weight: 600;">${formatBRL(v.valor)}</td>
+                        <td>${v.vencimento}</td>
+                        <td><span class="badge ${badgeClass}">${v.status}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Renderizar Gráfico
+        const sc = data.statusContagem;
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Em aberto', 'Em andamento', 'Atrasados', 'Quitados'],
+                datasets: [{
+                    data: [
+                        sc['Em aberto'] || 0,
+                        sc['Em andamento'] || 0,
+                        sc['Atrasado'] || 0,
+                        sc['Quitado'] || 0
+                    ],
+                    backgroundColor: ['#f59e0b', '#0284c7', '#ef4444', '#10b981'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 14,
+                            padding: 14,
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                cutout: '68%'
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+{% endblock %}

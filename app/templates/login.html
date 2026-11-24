@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - WJ Finance</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body style="margin: 0; padding: 0;">
+    <div class="login-body">
+        <!-- Banner Esquerdo -->
+        <div class="login-banner">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="background: #f97316; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: #fff;">
+                        WJ
+                    </div>
+                    <span style="font-size: 2.2rem; font-weight: 800; letter-spacing: 1px; color: #fff;">FINANCE</span>
+                </div>
+                <h3 style="font-size: 1.1rem; font-weight: 400; color: #cbd5e1; margin-top: 10px;">
+                    Sistema de Gerenciamento de Empréstimos
+                </h3>
+                <div style="font-size: 0.85rem; color: #94a3b8; display: flex; gap: 16px; margin-top: 20px;">
+                    <span><i class="fa-solid fa-shield-halved" style="color: #f97316;"></i> Seguro</span>
+                    <span>•</span>
+                    <span><i class="fa-solid fa-bolt" style="color: #f97316;"></i> Simples</span>
+                    <span>•</span>
+                    <span><i class="fa-solid fa-circle-check" style="color: #f97316;"></i> Completo</span>
+                </div>
+            </div>
+            <div style="position: absolute; bottom: 20px; font-size: 0.75rem; color: #64748b;">
+                © 2026 WJ Finance. Todos os direitos reservados.
+            </div>
+        </div>
+
+        <!-- Formulário Direito -->
+        <div class="login-form-container">
+            <div class="login-box">
+                <div>
+                    <h2 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 6px;">Bem-vindo de volta!</h2>
+                    <p style="font-size: 0.9rem; color: #64748b;">Faça login para acessar sua conta</p>
+                </div>
+
+                <div id="error-alert" style="display: none; padding: 12px; background: #fee2e2; color: #991b1b; border-radius: 8px; font-size: 0.85rem;"></div>
+
+                <form id="loginForm" onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="seu@email.com" value="admin@wjfinance.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="senha">Senha</label>
+                        <div style="position: relative;">
+                            <input type="password" id="senha" class="form-control" style="width: 100%;" placeholder="Sua senha" value="admin123" required>
+                            <i class="fa-regular fa-eye" id="togglePassword" onclick="togglePasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8;"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="padding: 12px; font-size: 1rem; margin-top: 10px;">
+                        Entrar
+                    </button>
+                </form>
+
+                <div style="font-size: 0.82rem; color: #64748b; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                    <strong>Credenciais padrão de teste:</strong><br>
+                    E-mail: <code>admin@wjfinance.com</code><br>
+                    Senha: <code>admin123</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const pwd = document.getElementById('senha');
+            const icon = document.getElementById('togglePassword');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                pwd.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            const errBox = document.getElementById('error-alert');
+            errBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Falha ao autenticar.');
+                }
+                window.location.href = '/';
+            } catch (err) {
+                errBox.innerText = err.message;
+                errBox.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

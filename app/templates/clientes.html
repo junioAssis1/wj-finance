@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block page_title %}Clientes{% endblock %}
+{% block page_subtitle %}Gerencie seus clientes cadastrados{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+    <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Buscar clientes por nome, CPF ou telefone..." onkeyup="handleSearch(event)">
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="/web/clientes/novo" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Novo Cliente
+        </a>
+    </div>
+</div>
+
+<div class="panel-card" style="padding: 0; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Telefone</th>
+                    <th>E-mail</th>
+                    <th>Status</th>
+                    <th style="text-align: center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-clientes">
+                <tr><td colspan="6" style="text-align: center; padding: 24px; color: #94a3b8;">Carregando clientes...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let searchTimeout = null;
+
+    async function carregarClientes(query = '') {
+        const url = query ? `/clientes?q=${encodeURIComponent(query)}` : '/clientes';
+        const clientes = await apiFetch(url);
+        const tbody = document.getElementById('tabela-clientes');
+        tbody.innerHTML = '';
+
+        if (!clientes || clientes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8;">Nenhum cliente encontrado.</td></tr>';
+            return;
+        }
+
+        clientes.forEach(c => {
+            const statusClass = c.status === 'Ativo' ? 'badge-success' : 'badge-danger';
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight: 600; color: #0f172a;">${c.nome}</td>
+                    <td>${c.cpf}</td>
+                    <td>${c.telefone || '-'}</td>
+                    <td>${c.email || '-'}</td>
+                    <td><span class="badge ${statusClass}">${c.status}</span></td>
+                    <td style="text-align: center;">
+                        <a href="/web/clientes/editar/${c.id}" class="btn-icon" title="Editar"><i class="fa-regular fa-pen-to-square"></i></a>
+                        <button onclick="excluirCliente(${c.id}, '${c.nome}')" class="btn-icon" style="color: #ef4444;" title="Excluir"><i class="fa-regular fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function handleSearch(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            carregarClientes(e.target.value);
+        }, 300);
+    }
+
+    async function excluirCliente(id, nome) {
+        if (!confirm(`Deseja realmente inativar ou excluir o cliente ${nome}?`)) return;
+        try {
+            const res = await apiFetch(`/clientes/${id}`, { method: 'DELETE' });
+            alert(res.message);
+            carregarClientes();
+        } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => carregarClientes());
+</script>
+{% endblock %}
