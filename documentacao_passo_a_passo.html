@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Documentação Passo a Passo - WJ Finance</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 15mm 20mm 15mm;
+        }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            line-height: 1.55;
+            font-size: 10.5pt;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .page-break {
+            page-break-after: always;
+        }
+
+        /* Capa */
+        .cover {
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+        .cover-badge {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: #fff;
+            font-size: 38pt;
+            font-weight: 800;
+            width: 90px;
+            height: 90px;
+            line-height: 90px;
+            border-radius: 20px;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
+        }
+        .cover-title {
+            font-size: 28pt;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 10px 0 5px 0;
+            letter-spacing: -0.5px;
+        }
+        .cover-subtitle {
+            font-size: 14pt;
+            color: #f97316;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cover-desc {
+            font-size: 11pt;
+            color: #64748b;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+        .cover-meta {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px 30px;
+            width: 80%;
+            max-width: 480px;
+            text-align: left;
+            font-size: 10pt;
+        }
+        .cover-meta table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .cover-meta td {
+            padding: 6px 4px;
+        }
+        .cover-meta td.label {
+            color: #64748b;
+            font-weight: 600;
+            width: 40%;
+        }
+        .cover-meta td.val {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        /* Títulos */
+        h1 {
+            font-size: 18pt;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 2px solid #f97316;
+            padding-bottom: 6px;
+            margin-top: 24px;
+            margin-bottom: 14px;
+        }
+        h2 {
+            font-size: 13pt;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        h3 {
+            font-size: 11pt;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+
+        p {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        /* Caixas de destaque */
+        .callout {
+            background-color: #f8fafc;
+            border-left: 4px solid #f97316;
+            padding: 12px 16px;
+            margin: 14px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 9.8pt;
+        }
+        .callout-success {
+            background-color: #f0fdf4;
+            border-left-color: #16a34a;
+        }
+        .callout-info {
+            background-color: #f0f9ff;
+            border-left-color: #0284c7;
+        }
+
+        /* Código */
+        pre {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 8.8pt;
+            overflow-x: auto;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+        code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 9pt;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        /* Tabelas */
+        table.doc-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 18px 0;
+            font-size: 9.5pt;
+        }
+        table.doc-table th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: left;
+            padding: 8px 12px;
+            border: 1px solid #1e293b;
+        }
+        table.doc-table td {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+        }
+        table.doc-table tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: 600;
+        }
+        .badge-orange { background: #ffedd5; color: #c2410c; }
+        .badge-green  { background: #dcfce7; color: #166534; }
+        .badge-blue   { background: #e0f2fe; color: #075985; }
+
+        /* Listas */
+        ul, ol {
+            margin-top: 4px;
+            margin-bottom: 12px;
+            padding-left: 24px;
+        }
+        li {
+            margin-bottom: 4px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8.5pt;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CAPA -->
+    <div class="cover">
+        <div>
+            <div class="cover-badge">WJ</div>
+            <div class="cover-title">WJ FINANCE</div>
+            <div class="cover-subtitle">Sistema de Gerenciamento de Empréstimos</div>
+            <p class="cover-desc">
+                Documentação Técnica e Passo a Passo da Construção do Sistema em Python: Arquitetura, Banco de Dados, Cálculos Financeiros, Autenticação, Interface e Deploy no GitHub.
+            </p>
+        </div>
+
+        <div class="cover-meta">
+            <table>
+                <tr>
+                    <td class="label">Autor / Desenvolvedor:</td>
+                    <td class="val">Junio Assis</td>
+                </tr>
+                <tr>
+                    <td class="label">Repositório Oficial:</td>
+                    <td class="val">github.com/junioAssis1/wj-finance</td>
+                </tr>
+                <tr>
+                    <td class="label">Tecnologias Principais:</td>
+                    <td class="val">Python 3.14, FastAPI, SQLAlchemy, Jinja2</td>
+                </tr>
+                <tr>
+                    <td class="label">Versão do Sistema:</td>
+                    <td class="val">v1.0.0 (Release de Produção)</td>
+                </tr>
+                <tr>
+                    <td class="label">Data de Conclusão:</td>
+                    <td class="val">Fevereiro / 2026</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="font-size: 9pt; color: #94a3b8;">
+            Documento Gerado Automatizado • Projeto Educacional e Portfólio Profissional
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SUMÁRIO EXECUTIVO E OBJETIVOS -->
+    <h1>1. Visão Geral e Objetivos do Projeto</h1>
+    
+    <p>
+        O projeto <strong>WJ Finance</strong> teve como proposta inicial a criação de uma solução completa e robusta para cadastro, simulação, contratação e acompanhamento financeiro de empréstimos pessoais e empresariais.
+    </p>
+
+    <div class="callout callout-info">
+        <strong>Transição Estratégica para Python:</strong> O rascunho conceitual inicial previa o uso de Node.js e Express. Atendendo aos objetivos de desenvolvimento, o sistema foi integralmente concebido e implementado em <strong>Python com FastAPI e SQLAlchemy</strong>, garantindo alta performance assíncrona, documentação interativa automática (OpenAPI/Swagger) e tipagem rigorosa através do Pydantic v2.
+    </div>
+
+    <h2>1.1. Principais Regras de Negócio Contempladas</h2>
+    <ul>
+        <li><strong>Autenticação Centralizada:</strong> Controle de acesso por e-mail e senha com tokens JWT e perfis (ADMIN e OPERADOR).</li>
+        <li><strong>Gestão de Clientes:</strong> Validação de dados cadastrais (CPF único, contatos e endereço), histórico de contratos e inativação lógica.</li>
+        <li><strong>Motor de Cálculo Financeiro:</strong> Suporte tanto ao <em>Sistema Francês de Amortização (Tabela Price - Juros Compostos)</em> quanto ao sistema de <em>Juros Simples</em>.</li>
+        <li><strong>Cronograma Dinâmico de Parcelas:</strong> Criação automática de parcelas com valor principal, juros e amortização discriminados.</li>
+        <li><strong>Controle de Inadimplência:</strong> Identificação automática de parcelas em atraso com cômputo dos dias corridos após o vencimento.</li>
+        <li><strong>Quitação Automatizada:</strong> O status geral do empréstimo transita automaticamente de <em>Em andamento</em> para <em>Quitado</em> quando o saldo devedor atinge zero.</li>
+        <li><strong>Simulador Interativo:</strong> Permite simulações prévias instantâneas sem gravar registros no banco de dados.</li>
+        <li><strong>Dashboard e Relatórios:</strong> Métricas agregadas (Total Emprestado, Recebido e a Receber), gráficos visuais e exportação para Excel (CSV).</li>
+    </ul>
+
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+
+    <h1>2. Arquitetura da Solução</h1>
+    <p>
+        A arquitetura foi estruturada em camadas bem definidas seguindo as melhores práticas da comunidade Python:
+    </p>
+
+    <table class="doc-table">
+        <thead>
+            <tr>
+                <th>Camada / Módulo</th>
+                <th>Tecnologia Utilizada</th>
+                <th>Responsabilidade</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Framework Web / API</strong></td>
+                <td>FastAPI 0.143 + Starlette</td>
+                <td>Roteamento HTTP, injeção de dependências e documentação Swagger em <code>/docs</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>Persistência de Dados</strong></td>
+                <td>SQLAlchemy 2.0 (ORM)</td>
+                <td>Mapeamento relacional de tabelas, transações ACID e consultas agregadas.</td>
+            </tr>
+            <tr>
+                <td><strong>Banco de Dados</strong></td>
+                <td>SQLite / PostgreSQL</td>
+                <td>Armazenamento leve e portável por padrão (SQLite) com compatibilidade com PostgreSQL.</td>
+            </tr>
+            <tr>
+                <td><strong>Validação e Schemas</strong></td>
+                <td>Pydantic v2</td>
+                <td>Validação estrita de tipos, campos obrigatórios e sanitização de payloads.</td>
+            </tr>
+            <tr>
+                <td><strong>Segurança</strong></td>
+                <td>PBKDF2-SHA256 + JWT</td>
+                <td>Geração de hashes com salting criptográfico e tokens de sessão assinados via HMAC.</td>
+            </tr>
+            <tr>
+                <td><strong>Interface do Usuário (UI)</strong></td>
+                <td>Jinja2 + CSS3 + Chart.js</td>
+                <td>Renderização das 9 telas do mockup corporativo com gráficos interativos.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- PASSO A PASSO DO DESENVOLVIMENTO -->
+    <h1>3. Passo a Passo do Desenvolvimento</h1>
+
+    <h2>Etapa 1: Modelagem do Banco de Dados Relacional</h2>
+    <p>
+        No arquivo <code>app/models.py</code>, foram modeladas 5 entidades relacionais fundamentais:
+    </p>
+    <ul>
+        <li><code>Usuario</code>: Responsável pelo acesso ao sistema (id, nome, email, senha hash, perfil, ativo, createdAt).</li>
+        <li><code>Cliente</code>: Pessoa física ou jurídica (id, nome, cpf [único], telefone, email, endereco, status).</li>
+        <li><code>Emprestimo</code>: O contrato financeiro (id, clienteId, valor, taxa, tipoJuros, prazo, data, status, totalJuros, totalPagar).</li>
+        <li><code>Parcela</code>: O cronograma periódico (id, emprestimoId, numero, vencimento, valorOriginal, juros, valorTotal, valorPago, status, diasAtraso).</li>
+        <li><code>Pagamento</code>: Transações financeiras efetuadas (id, parcelaId, valorPago, dataPagamento, metodoPagamento).</li>
+    </ul>
+
+    <h2>Etapa 2: Motor de Cálculos Financeiros (Tabela Price e Juros Simples)</h2>
+    <p>
+        No arquivo <code>app/calculations.py</code>, foram implementadas as fórmulas financeiras rigorosas.
+    </p>
+
+    <h3>Fórmula da Tabela Price (Juros Compostos com Prestações Constantes):</h3>
+    <pre><code># PMT = PV * (i * (1 + i)^n) / ((1 + i)^n - 1)
+fator = (1 + i) ** prazo
+valor_parcela = valor * (i * fator) / (fator - 1)
+total_pagar = valor_parcela * prazo
+total_juros = total_pagar - valor</code></pre>
+    <p>
+        Para cada parcela, o motor calcula os juros sobre o saldo devedor remanescente e abate a amortização correspondente, gerando o cronograma idêntico ao praticado por instituições financeiras.
+    </p>
+
+    <h2>Etapa 3: Sistema de Autenticação e Segurança Criptográfica</h2>
+    <p>
+        Em <code>app/auth.py</code>, o sistema implementa:
+    </p>
+    <ul>
+        <li><strong>Hash com Salting:</strong> Cada senha recebe um salt aleatório hexadecimal de 16 bytes e passa por 100.000 iterações de <code>PBKDF2-HMAC-SHA256</code>.</li>
+        <li><strong>Tokens JWT RFC 7519:</strong> Geração e decodificação de tokens com assinatura HMAC-SHA256 e tempo de expiração de 24 horas.</li>
+        <li><strong>Dual-Mode Auth:</strong> As rotas autenticadas aceitam tanto o cabeçalho <code>Authorization: Bearer &lt;token&gt;</code> (para consumo de API) quanto o Cookie <code>access_token</code> (para navegação transparente na interface web).</li>
+    </ul>
+
+    <h2>Etapa 4: Construção dos Controladores RESTful</h2>
+    <p>
+        Criou-se uma estrutura modular de routers em <code>app/routers/</code>:
+    </p>
+    <ul>
+        <li><code>auth.py</code>: Endpoints <code>POST /auth/login</code>, <code>GET /auth/me</code> e <code>POST /auth/logout</code>.</li>
+        <li><code>clientes.py</code>: CRUD completo com busca por substring de nome/CPF.</li>
+        <li><code>emprestimos.py</code>: Endpoint <code>POST /emprestimos</code> que, de forma atômica em uma única transação, calcula as parcelas e as grava no banco.</li>
+        <li><code>pagamentos.py</code>: Endpoint <code>POST /pagamentos</code> que credita o valor na parcela e checa se o contrato foi 100% quitado.</li>
+        <li><code>simulacoes.py</code>: Endpoint <code>POST /simulacoes</code> para uso livre no simulador.</li>
+        <li><code>dashboard.py</code>: Agregações em tempo real de capital emprestado, a receber e parcelas vencendo.</li>
+        <li><code>relatorios.py</code>: Filtros temporais e exportação de CSV/Excel com formatação UTF-8 BOM.</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h2>Etapa 5: Construção das 9 Telas da Interface WJ Finance</h2>
+    <p>
+        A interface gráfica foi desenhada em HTML5 semântico com CSS moderno (Grid e Flexbox) e paleta baseada em <em>Dark Slate (#0f172a)</em> e <em>Laranja Vibrante (#f97316)</em>, cobrindo as 9 telas do mockup original:
+    </p>
+
+    <table class="doc-table">
+        <thead>
+            <tr>
+                <th>Tela</th>
+                <th>Arquivo Template</th>
+                <th>Funcionalidades Principais</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>1. Login</strong></td>
+                <td><code>app/templates/login.html</code></td>
+                <td>Banner visual corporativo WJ Finance, formulário seguro com visibilidade de senha e feedback de erro.</td>
+            </tr>
+            <tr>
+                <td><strong>2. Dashboard</strong></td>
+                <td><code>app/templates/dashboard.html</code></td>
+                <td>Cards de totais (R$), gráfico Donut de status e tabela de próximos vencimentos.</td>
+            </tr>
+            <tr>
+                <td><strong>3. Clientes</strong></td>
+                <td><code>app/templates/clientes.html</code></td>
+                <td>Tabela dinâmica com pesquisa instantânea, badges de status e botões de ação rápida.</td>
+            </tr>
+            <tr>
+                <td><strong>4. Novo Cliente</strong></td>
+                <td><code>app/templates/novo_cliente.html</code></td>
+                <td>Formulário completo de cadastro e edição de clientes com validação.</td>
+            </tr>
+            <tr>
+                <td><strong>5. Empréstimos</strong></td>
+                <td><code>app/templates/emprestimos.html</code></td>
+                <td>Listagem geral dos contratos ativos, valores totais e link direto para o cronograma.</td>
+            </tr>
+            <tr>
+                <td><strong>6. Novo Empréstimo</strong></td>
+                <td><code>app/templates/novo_emprestimo.html</code></td>
+                <td>Contratação com seletor de cliente, taxa, método e <strong>card de prévia em tempo real</strong> antes de salvar.</td>
+            </tr>
+            <tr>
+                <td><strong>7. Parcelas</strong></td>
+                <td><code>app/templates/parcelas.html</code></td>
+                <td>Quadro detalhado de amortização, resumo financeiro e <strong>modal interativo para registrar pagamentos</strong>.</td>
+            </tr>
+            <tr>
+                <td><strong>8. Simulador</strong></td>
+                <td><code>app/templates/simulador.html</code></td>
+                <td>Simulação rápida com comparação lado a lado entre Juros Simples e Compostos.</td>
+            </tr>
+            <tr>
+                <td><strong>9. Relatórios</strong></td>
+                <td><code>app/templates/relatorios.html</code></td>
+                <td>Filtros por período, gráfico de linha de evolução de recebimentos e botão para baixar CSV/Excel.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Etapa 6: Carga de Dados Iniciais Realistas (Seed)</h2>
+    <p>
+        No arquivo <code>seed.py</code>, foi criada uma rotina que popula o banco de dados na primeira execução com clientes reais (João da Silva, Maria Oliveira, Carlos Souza, etc.), empréstimos em andamento, quitados e atrasados, permitindo visualizar o sistema funcionando imediatamente em sua capacidade total.
+    </p>
+
+    <h2>Etapa 7: Resolução de Incidentes Técnicos</h2>
+    <p>
+        Durante os testes de integração do servidor Uvicorn com Starlette 1.x e FastAPI 0.143, detectou-se que o método <code>TemplateResponse</code> passou a exigir o parâmetro <code>request</code> como primeiro argumento. A rota <code>app/routers/web.py</code> foi prontamente atualizada com a sintaxe moderna <code>TemplateResponse(request=request, name=..., context=...)</code>, garantindo código de status HTTP 200 em todas as páginas.
+    </p>
+
+    <h2>Etapa 8: Versionamento e Publicação no GitHub</h2>
+    <p>
+        O projeto foi inicializado via Git, protegido com <code>.gitignore</code> para impedir o vazamento de arquivos de ambiente e banco de dados, e publicado com sucesso no repositório oficial do autor:
+    </p>
+    <div class="callout callout-success">
+        <strong>URL do Repositório:</strong> <a href="https://github.com/junioAssis1/wj-finance">https://github.com/junioAssis1/wj-finance</a><br>
+        <strong>Commit Inicial:</strong> <code>feat: Sistema de Gerenciamento de Empréstimos WJ Finance</code>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- GUIA DE EXECUÇÃO -->
+    <h1>4. Guia Rápido de Instalação e Execução</h1>
+
+    <h2>4.1. Como iniciar o sistema localmente</h2>
+    <ol>
+        <li>Abrir o terminal na pasta do projeto:
+            <pre><code>cd "c:\Users\walisson\OneDrive\Documentos\Projeto investimento"</code></pre>
+        </li>
+        <li>Executar o comando de inicialização:
+            <pre><code>python run.py</code></pre>
+        </li>
+        <li>O terminal exibirá a confirmação da carga de dados e o endereço do servidor:
+            <pre><code>============================================================
+ WJ FINANCE - SISTEMA DE GERENCIAMENTO DE EMPRÉSTIMOS 
+============================================================
+✓ Usuário administrador: admin@wjfinance.com / admin123 (Junio Assis)
+Iniciando servidor web em http://127.0.0.1:8000
+============================================================</code></pre>
+        </li>
+    </ol>
+
+    <h2>4.2. Links de Acesso</h2>
+    <ul>
+        <li><strong>Painel Web:</strong> <code>http://127.0.0.1:8000</code></li>
+        <li><strong>Documentação Swagger da API:</strong> <code>http://127.0.0.1:8000/docs</code></li>
+        <li><strong>Documentação ReDoc:</strong> <code>http://127.0.0.1:8000/redoc</code></li>
+    </ul>
+
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+    <div style="text-align: center; color: #64748b; font-size: 9.5pt; margin-top: 40px;">
+        <strong>WJ Finance</strong> • Desenvolvido por <strong>Junio Assis</strong><br>
+        Projeto Educacional de Alto Nível para Portfólio de Engenharia de Software Backend
+    </div>
+
+    <div class="footer">
+        <span>WJ Finance - Documentação Oficial</span>
+        <span>Página 4 de 4</span>
+    </div>
+
+</body>
+</html>
